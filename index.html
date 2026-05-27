@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workup Calculators</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Dark theme ───────────────────────────────────────── */
+  :root {
+    --blue:          #2F54D4;
+    --blue-hover:    #2748bc;
+    --blue-glow:     rgba(47,84,212,0.25);
+    --bg:            #000;
+    --surface:       #111;
+    --surface-2:     #1a1a1a;
+    --border:        #2a2a2a;
+    --text:          #f2f2f2;
+    --muted:         #c7c7c7;
+    --label:         #a7a7a7;
+    --meta:          #666;
+    --result-body:   #aaa;
+    --clear-color:   #888;
+    --clear-hover:   #bbb;
+    --clear-hover-bg:#1a1a1a;
+    --clear-hover-bd:#444;
+    --tile-bg:       rgba(255,255,255,0.04);
+    --range-bg:      rgba(255,255,255,0.09);
+    --success:       #22d3a0;
+    --success-bg:    rgba(34,211,160,0.07);
+    --success-bd:    rgba(34,211,160,0.25);
+    --warn:          #f0aa30;
+    --warn-bg:       rgba(240,170,48,0.07);
+    --warn-bd:       rgba(240,170,48,0.25);
+    --danger:        #f04444;
+    --danger-bg:     rgba(240,68,68,0.07);
+    --danger-bd:     rgba(240,68,68,0.25);
+  }
+
+  /* ── Light theme ──────────────────────────────────────── */
+  [data-theme="light"] {
+    --bg:            #f0f0f2;
+    --surface:       #ffffff;
+    --surface-2:     #f0f0f2;
+    --border:        #dcdce0;
+    --text:          #111111;
+    --muted:         #444450;
+    --label:         #666672;
+    --meta:          #888890;
+    --result-body:   #444450;
+    --clear-color:   #555560;
+    --clear-hover:   #222;
+    --clear-hover-bg:#e8e8ec;
+    --clear-hover-bd:#bbbbcc;
+    --tile-bg:       rgba(0,0,0,0.03);
+    --range-bg:      rgba(0,0,0,0.04);
+    --success:       #0f9e76;
+    --success-bg:    rgba(15,158,118,0.08);
+    --success-bd:    rgba(15,158,118,0.28);
+    --warn:          #b87d00;
+    --warn-bg:       rgba(184,125,0,0.08);
+    --warn-bd:       rgba(184,125,0,0.28);
+    --danger:        #cc2222;
+    --danger-bg:     rgba(204,34,34,0.07);
+    --danger-bd:     rgba(204,34,34,0.28);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+    transition: background .2s, color .2s;
+  }
+
+  /* ── Two-column page layout ───────────────────────────── */
+  .page-grid {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  @media (max-width: 960px) {
+    .page-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Header ───────────────────────────────────────────── */
+  .header {
+    display:flex; align-items:center; gap:14px;
+    margin-bottom:.75rem;
+  }
+  .logo-box {
+    width:44px; height:44px; border-radius:10px;
+    background:var(--blue); display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .logo-box svg { width:24px; height:24px; }
+  .header-text { flex:1; }
+  .header-text h1 { font-size:20px; font-weight:600; letter-spacing:-0.02em; color:var(--text); }
+  .header-text p  { font-size:13px; font-weight:500; color:var(--muted); margin-top:2px; }
+
+  /* ── Theme toggle ─────────────────────────────────────── */
+  .theme-toggle {
+    flex-shrink:0; width:38px; height:38px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s, border-color .15s; color:var(--muted);
+  }
+  .theme-toggle:hover { background:var(--surface-2); border-color:var(--clear-hover-bd); }
+  .theme-toggle svg { width:18px; height:18px; }
+  .icon-sun  { display:none; }
+  .icon-moon { display:block; }
+  [data-theme="light"] .icon-sun  { display:block; }
+  [data-theme="light"] .icon-moon { display:none; }
+
+  .important-note { font-size:13px; font-weight:600; color:var(--muted); margin-bottom:1.25rem; display:flex; align-items:center; gap:8px; }
+
+  /* ── Card ─────────────────────────────────────────────── */
+  .card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:1.5rem; margin-bottom:1rem;
+    transition:background .2s, border-color .2s;
+  }
+
+  /* ── Form elements ────────────────────────────────────── */
+  .field { margin-bottom:1.1rem; }
+  .field:last-of-type { margin-bottom:0; }
+  label {
+    display:block; font-size:11px; font-weight:600;
+    letter-spacing:0.07em; text-transform:uppercase;
+    color:var(--label); margin-bottom:7px;
+  }
+
+  select, input.date-input, input.currency-input {
+    width:100%; background:var(--surface-2);
+    border:1px solid var(--border); border-radius:8px;
+    color:var(--text); font-size:15px; padding:10px 14px;
+    outline:none; transition:border-color .15s, box-shadow .15s, background .2s;
+  }
+  select:focus, input.date-input:focus, input.currency-input:focus {
+    border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-glow);
+  }
+  select {
+    -webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 13px center; padding-right:36px;
+  }
+  input.date-input::placeholder, input.currency-input::placeholder { color:var(--meta); }
+  input.date-input.invalid, input.currency-input.invalid {
+    border-color:var(--danger); box-shadow:0 0 0 3px rgba(240,68,68,0.15);
+  }
+
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  /* ── Date input wrapper ───────────────────────────────── */
+  .date-wrap { position:relative; }
+  .date-wrap .date-input { padding-right:42px; }
+  .cal-icon-btn {
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer;
+    color:var(--meta); padding:4px; border-radius:4px;
+    display:flex; align-items:center; justify-content:center;
+    transition:color .15s, background .15s;
+  }
+  .cal-icon-btn:hover { color:var(--text); background:var(--surface-2); }
+  .cal-icon-btn svg { width:16px; height:16px; pointer-events:none; }
+
+  /* ── Currency input wrapper ───────────────────────────── */
+  .currency-wrap { position:relative; }
+  .currency-wrap::before {
+    content:'$'; position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    color:var(--meta); font-size:15px; pointer-events:none; z-index:1;
+  }
+  .currency-input { padding-left:28px !important; }
+
+  /* ── Button row ───────────────────────────────────────── */
+  .btn-row { display:grid; grid-template-columns:1fr auto; gap:10px; margin-top:1.25rem; }
+  .btn {
+    background:var(--blue); color:#fff; border:none; border-radius:8px;
+    font-size:15px; font-weight:500; padding:13px; cursor:pointer;
+    transition:background .15s, transform .1s, box-shadow .15s;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn:hover:not(.btn-off) { background:var(--blue-hover); box-shadow:0 4px 18px var(--blue-glow); }
+  .btn:active:not(.btn-off) { transform:scale(.99); }
+  .btn.btn-off { opacity:.35; cursor:not-allowed; }
+  .btn svg { width:17px; height:17px; flex-shrink:0; }
+  .btn-clear {
+    background:transparent; color:var(--clear-color);
+    border:1px solid var(--border); border-radius:8px;
+    font-size:13px; font-weight:500; padding:13px 18px; cursor:pointer;
+    transition:background .15s, color .15s, border-color .15s;
+    display:flex; align-items:center; gap:7px; white-space:nowrap;
+  }
+  .btn-clear svg { width:14px; height:14px; flex-shrink:0; }
+  .btn-clear:hover { background:var(--clear-hover-bg); color:var(--clear-hover); border-color:var(--clear-hover-bd); }
+  .btn-clear:active { transform:scale(.99); }
+
+  /* ── State info chip ──────────────────────────────────── */
+  .state-info {
+    margin-top:1rem; background:rgba(47,84,212,0.08);
+    border:1px solid rgba(47,84,212,0.2); border-radius:8px;
+    padding:.65rem 1rem; font-size:13px; color:#8899dd; display:none;
+  }
+  [data-theme="light"] .state-info { color:#3a55bb; }
+  .state-info.show { display:block; }
+  .state-info strong { color:#7088cc; font-weight:500; }
+  [data-theme="light"] .state-info strong { color:#2a45aa; }
+
+  /* ── Results ──────────────────────────────────────────── */
+  .result { border-radius:12px; padding:1.25rem; margin-bottom:1rem; border:1px solid; transition:background .2s; }
+  .result.success { background:var(--success-bg); border-color:var(--success-bd); }
+  .result.warn    { background:var(--warn-bg);    border-color:var(--warn-bd); }
+  .result.danger  { background:var(--danger-bg);  border-color:var(--danger-bd); }
+  .result-hd { display:flex; align-items:center; gap:9px; margin-bottom:10px; }
+  .result-hd svg { width:19px; height:19px; flex-shrink:0; }
+  .result-title { font-size:14px; font-weight:600; }
+  .success .result-title { color:var(--success); }
+  .warn    .result-title { color:var(--warn); }
+  .danger  .result-title { color:var(--danger); }
+  .result-body { font-size:14px; color:var(--result-body); line-height:1.65; }
+  .result-body strong { font-weight:500; }
+
+  /* Tiles (years licensed) */
+  .tiles { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .tile {
+    background:var(--tile-bg); border:1px solid rgba(34,211,160,.22);
+    border-radius:8px; padding:8px 18px; text-align:center; min-width:68px;
+  }
+  [data-theme="light"] .tile { border-color:rgba(15,158,118,.3); }
+  .tile-num { font-size:28px; font-weight:600; color:var(--success); line-height:1.1; letter-spacing:-.02em; }
+  .tile-lbl { font-size:11px; color:var(--muted); margin-top:3px; }
+
+  .range-badge {
+    display:inline-block; background:var(--range-bg);
+    border:1px solid rgba(34,211,160,.25); border-radius:8px;
+    padding:9px 20px; font-size:18px; font-weight:600; color:var(--success); margin-bottom:10px;
+  }
+  [data-theme="light"] .range-badge { border-color:rgba(15,158,118,.3); }
+
+  .meta { font-size:12px; color:var(--meta); margin-top:8px; }
+  .meta .dot { margin:0 6px; }
+
+  /* ── Premium result ───────────────────────────────────── */
+  .prem-pct {
+    font-size:52px; font-weight:700; letter-spacing:-0.03em;
+    line-height:1; margin:6px 0 10px;
+  }
+  .prem-pct.increase { color:var(--success); }
+  .prem-pct.decrease { color:var(--danger); }
+  .prem-pct.flat     { color:var(--text); }
+
+  /* ── Calendar popup ───────────────────────────────────── */
+  #calPopup {
+    position:fixed; z-index:1000; background:var(--surface);
+    border:1px solid var(--border); border-radius:12px; padding:12px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.35); width:268px; user-select:none; display:none;
+  }
+  .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .cal-nav {
+    background:none; border:none; color:var(--muted); cursor:pointer;
+    font-size:15px; padding:4px 8px; border-radius:6px; line-height:1;
+    transition:background .12s, color .12s;
+  }
+  .cal-nav:hover { background:var(--surface-2); color:var(--text); }
+  .cal-month-label { font-size:13px; font-weight:600; color:var(--text); flex:1; text-align:center; letter-spacing:-0.01em; }
+  .cal-dow { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:3px; }
+  .cal-dow span { text-align:center; font-size:11px; font-weight:600; color:var(--meta); padding:3px 0; letter-spacing:0.03em; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+  .cal-day {
+    aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+    font-size:13px; border-radius:6px; cursor:pointer;
+    color:var(--text); border:none; background:none; width:100%; transition:background .1s, color .1s;
+  }
+  .cal-day:hover:not(.empty) { background:var(--surface-2); }
+  .cal-day.empty              { cursor:default; pointer-events:none; }
+  .cal-day.today              { border:1px solid var(--border); font-weight:600; }
+  .cal-day.selected           { background:var(--blue); color:#fff; font-weight:600; }
+  .cal-day.selected:hover     { background:var(--blue-hover); }
+
+  /* ── Experimental feature panels ─────────────────────── */
+  .exp-divider { border-top:1px solid var(--border); margin:1.1rem 0 .9rem; }
+  .exp-panel { margin-bottom:.85rem; }
+  .exp-panel:last-child { margin-bottom:0; }
+  .exp-header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .exp-header-left { display:flex; align-items:center; gap:8px; }
+  .exp-title { font-size:13px; font-weight:500; color:var(--text); }
+  .exp-content { margin-top:.75rem; padding-top:.75rem; border-top:1px solid var(--border); }
+  .exp-hint { font-size:12px; color:var(--meta); margin-bottom:.75rem; line-height:1.55; }
+  .exp-content label { margin-top:0; }
+  .toggle-switch {
+    position:relative; display:inline-block;
+    width:36px; height:20px; cursor:pointer; flex-shrink:0;
+  }
+  .toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
+  .toggle-track {
+    position:absolute; inset:0; background:var(--border); border-radius:20px; transition:background .2s;
+  }
+  .toggle-track::before {
+    content:''; position:absolute; width:14px; height:14px; border-radius:50%;
+    background:#fff; top:3px; left:3px; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.25);
+  }
+  .toggle-switch input:checked + .toggle-track { background:var(--blue); }
+  .toggle-switch input:checked + .toggle-track::before { transform:translateX(16px); }
+
+  .red { color:#e03030; }
+  [data-theme="light"] .red { color:#cc2222; }
+</style>
+</head>
+<body>
+
+<div class="page-grid">
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!--  LEFT — Years Licensed Calculator                   -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div>
+    <header class="header">
+      <div class="logo-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="2"/>
+          <rect x="7" y="5" width="10" height="4" rx="1"/>
+          <circle cx="8"  cy="14" r="1"/>
+          <circle cx="12" cy="14" r="1"/>
+          <circle cx="16" cy="14" r="1"/>
+          <circle cx="8"  cy="18" r="1"/>
+          <circle cx="12" cy="18" r="1"/>
+          <circle cx="16" cy="18" r="1"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>YEARS LICENSED CALCULATOR</h1>
+        <p>Calculate years licensed with driver's date of birth and workup date</p>
+      </div>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1"  x2="12" y2="3"/>  <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1"  y1="12" x2="3"  y2="12"/>  <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+    </header>
+</br>
+    <p class="important-note"><span class="red">IMPORTANT:</span> Before using this calculator, please refer to guidelines for state specifics.</p>
+
+    <div class="card">
+      <div class="field">
+        <label for="stateSelect">State</label>
+        <select id="stateSelect">
+          <option value="">Select a state…</option>
+          <optgroup label="Exact Calculation (MA · NC · CA)">
+            <option value="MA">Massachusetts (MA)</option>
+            <option value="NC">North Carolina (NC)</option>
+            <option value="CA">California (CA)</option>
+          </optgroup>
+          <optgroup label="Months Licensed (NJ)">
+            <option value="NJ">New Jersey (NJ)</option>
+          </optgroup>
+          <optgroup label="All Other States — Range Output"></optgroup>
+        </select>
+        <div class="state-info" id="stateInfo"></div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="dobInput">Driver's Date of Birth</label>
+          <div class="date-wrap">
+            <input type="text" class="date-input" id="dobInput" placeholder="MM/DD/YYYY" autocomplete="off" inputmode="numeric" />
+            <button class="cal-icon-btn" id="dobCalBtn" type="button" aria-label="Open calendar" tabindex="-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="workupInput">Workup Date</label>
+          <div class="date-wrap">
+            <input type="text" class="date-input" id="workupInput" placeholder="MM/DD/YYYY" autocomplete="off" inputmode="numeric" />
+            <button class="cal-icon-btn" id="workupCalBtn" type="button" aria-label="Open calendar" tabindex="-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Experimental features -->
+      <div class="exp-divider"></div>
+
+      <div class="exp-panel" id="mvrPanel" style="display:none">
+        <div class="exp-header">
+          <div class="exp-header-left"><span class="exp-title">Original DL Issue Date</span></div>
+          <label class="toggle-switch" aria-label="Enable MVR issue date override">
+            <input type="checkbox" id="mvrToggle"><span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="exp-content" id="mvrContent" style="display:none">
+          <p class="exp-hint">The MVR shows the original license issue date. Enter it below to calculate years licensed directly — bypassing the DOB estimate.</p>
+          <label for="issueDateInput">Original DL Issue Date</label>
+          <div class="date-wrap" style="margin-top:7px">
+            <input type="text" class="date-input" id="issueDateInput" placeholder="MM/DD/YYYY" autocomplete="off" inputmode="numeric" />
+            <button class="cal-icon-btn" id="issueDateCalBtn" type="button" aria-label="Open calendar" tabindex="-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="exp-panel" id="agePanel">
+        <div class="exp-header">
+          <div class="exp-header-left"><span class="exp-title">Age First Licensed</span></div>
+          <label class="toggle-switch" aria-label="Enable age first licensed override">
+            <input type="checkbox" id="ageToggle"><span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="exp-content" id="ageContent" style="display:none">
+          <p class="exp-hint">A note or MVR indicates the age at which the driver was first licensed. Enter it below — decimals accepted (e.g. 16.5).</p>
+          <label for="ageInput">Age When First Licensed</label>
+          <input type="text" class="date-input" id="ageInput" placeholder="e.g.  16  or  16.5" autocomplete="off" style="margin-top:7px" />
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-off" id="calcBtn" aria-disabled="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="2" width="16" height="20" rx="2"/>
+            <line x1="8" y1="7"  x2="16" y2="7"/>
+            <line x1="8" y1="11" x2="16" y2="11"/>
+            <line x1="8" y1="15" x2="12" y2="15"/>
+          </svg>
+          Calculate
+        </button>
+        <button class="btn-clear" id="clearBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/>
+          </svg>
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <div id="result"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!--  RIGHT — Premium Workup Calculator                  -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div>
+    <header class="header">
+      <div class="logo-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <line x1="19" y1="5" x2="5" y2="19"/>
+          <circle cx="6.5" cy="6.5" r="2.5"/>
+          <circle cx="17.5" cy="17.5" r="2.5"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>PREMIUM WORKUP CALCULATOR</h1>
+        <p>Calculate the percentage change between old and new premium</p>
+      </div>
+    </header>
+
+    <!-- Spacer to align card with the left panel's card (accounts for IMPORTANT note height) -->
+    <div style="margin-bottom:2.75rem;visibility:hidden;font-size:13px;">placeholder</div>
+
+    <div class="card">
+      <div class="field">
+        <label for="premOldInput">Old Premium</label>
+        <div class="currency-wrap">
+          <input type="text" class="currency-input" id="premOldInput" placeholder="0.00" autocomplete="off" inputmode="decimal" />
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label for="premNewInput">New Premium</label>
+        <div class="currency-wrap">
+          <input type="text" class="currency-input" id="premNewInput" placeholder="0.00" autocomplete="off" inputmode="decimal" />
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-off" id="premCalcBtn" aria-disabled="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="19" y1="5" x2="5" y2="19"/>
+            <circle cx="6.5" cy="6.5" r="2.5"/>
+            <circle cx="17.5" cy="17.5" r="2.5"/>
+          </svg>
+          Calculate
+        </button>
+        <button class="btn-clear" id="premClearBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/>
+          </svg>
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <div id="premResult"></div>
+  </div>
+
+</div><!-- /page-grid -->
+
+<!-- Calendar popup — shared, fixed position -->
+<div id="calPopup">
+  <div class="cal-header">
+    <button class="cal-nav" id="calPrevYear"  title="Previous year">&#171;</button>
+    <button class="cal-nav" id="calPrevMonth" title="Previous month">&#8249;</button>
+    <span class="cal-month-label" id="calMonthLabel"></span>
+    <button class="cal-nav" id="calNextMonth" title="Next month">&#8250;</button>
+    <button class="cal-nav" id="calNextYear"  title="Next year">&#187;</button>
+  </div>
+  <div class="cal-dow">
+    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+</div>
+
+<script>
+// ─── Theme toggle ─────────────────────────────────────────────────────────────
+const html = document.documentElement;
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('calcTheme') || 'dark';
+html.setAttribute('data-theme', savedTheme);
+themeToggle.addEventListener('click', () => {
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('calcTheme', next);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  YEARS LICENSED CALCULATOR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const STATE_DATA = {
+  MA: { pM:192, lM:198, pL:'16',    lL:'16½'   },
+  NC: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  CA: { pM:186, lM:192, pL:'15½',   lL:'16'    },
+  NJ: { pM:192, lM:204, pL:'16',    lL:'17'    },
+  DC: { pM:192, lM:198, pL:'16',    lL:'16½'   },
+  AL: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  AK: { pM:168, lM:192, pL:'14',    lL:'16'    },
+  AZ: { pM:186, lM:192, pL:'15½',   lL:'16'    },
+  AR: { pM:168, lM:192, pL:'14',    lL:'16'    },
+  CO: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  CT: { pM:192, lM:196, pL:'16',    lL:'16y4m' },
+  DE: { pM:192, lM:198, pL:'16',    lL:'16½'   },
+  FL: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  GA: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  HI: { pM:186, lM:192, pL:'15½',   lL:'16'    },
+  ID: { pM:174, lM:180, pL:'14½',   lL:'15'    },
+  IL: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  IN: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  IA: { pM:168, lM:192, pL:'14',    lL:'16'    },
+  KS: { pM:168, lM:192, pL:'14',    lL:'16'    },
+  KY: { pM:192, lM:198, pL:'16',    lL:'16½'   },
+  LA: { pM:180, lM:204, pL:'15',    lL:'17'    },
+  ME: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  MD: { pM:189, lM:198, pL:'15y9m', lL:'16½'   },
+  MI: { pM:177, lM:192, pL:'14y9m', lL:'16'    },
+  MN: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  MS: { pM:180, lM:180, pL:'15',    lL:'15'    },
+  MO: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  MT: { pM:174, lM:192, pL:'14½',   lL:'16'    },
+  NE: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  NV: { pM:186, lM:192, pL:'15½',   lL:'16'    },
+  NH: { pM:186, lM:192, pL:'15½',   lL:'16'    },
+  NM: { pM:180, lM:186, pL:'15',    lL:'15½'   },
+  NY: { pM:192, lM:204, pL:'16',    lL:'17'    },
+  ND: { pM:168, lM:192, pL:'14',    lL:'16'    },
+  OH: { pM:186, lM:192, pL:'15½',   lL:'16'    },
+  OK: { pM:186, lM:192, pL:'15½',   lL:'16'    },
+  OR: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  PA: { pM:192, lM:198, pL:'16',    lL:'16½'   },
+  RI: { pM:192, lM:198, pL:'16',    lL:'16½'   },
+  SC: { pM:180, lM:186, pL:'15',    lL:'15½'   },
+  SD: { pM:168, lM:174, pL:'14',    lL:'14½'   },
+  TN: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  TX: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  UT: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  VT: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  VA: { pM:186, lM:195, pL:'15½',   lL:'16y3m' },
+  WA: { pM:186, lM:192, pL:'15½',   lL:'16'    },
+  WV: { pM:180, lM:192, pL:'15',    lL:'16'    },
+  WI: { pM:186, lM:192, pL:'15½',   lL:'16'    },
+  WY: { pM:180, lM:192, pL:'15',    lL:'16'    },
+};
+
+const STATE_NAMES = {
+  AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CO:'Colorado',
+  CT:'Connecticut',DC:'Washington, D.C.',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',
+  ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',
+  LA:'Louisiana',ME:'Maine',MD:'Maryland',MI:'Michigan',MN:'Minnesota',
+  MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',
+  NH:'New Hampshire',NM:'New Mexico',NY:'New York',
+  ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',
+  RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',
+  TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',
+  WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'
+};
+
+const EXACT_STATES = ['MA','NC','CA'];
+const MVR_STATES   = ['NC','RI','TX'];
+
+const otherGroup = document.querySelector('optgroup:last-of-type');
+Object.keys(STATE_NAMES).sort((a,b)=>STATE_NAMES[a].localeCompare(STATE_NAMES[b])).forEach(code => {
+  const opt = document.createElement('option');
+  opt.value = code;
+  opt.textContent = `${STATE_NAMES[code]} (${code})`;
+  otherGroup.appendChild(opt);
+});
+
+const selState       = document.getElementById('stateSelect');
+const dobInput       = document.getElementById('dobInput');
+const workupInput    = document.getElementById('workupInput');
+const calcBtn        = document.getElementById('calcBtn');
+const clearBtn       = document.getElementById('clearBtn');
+const resultDiv      = document.getElementById('result');
+const stateInfo      = document.getElementById('stateInfo');
+const mvrPanel       = document.getElementById('mvrPanel');
+const mvrToggle      = document.getElementById('mvrToggle');
+const mvrContent     = document.getElementById('mvrContent');
+const issueDateInput = document.getElementById('issueDateInput');
+const ageToggle      = document.getElementById('ageToggle');
+const ageContent     = document.getElementById('ageContent');
+const ageInput       = document.getElementById('ageInput');
+
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+function addMonths(date, m) {
+  const d = new Date(date);
+  const day = d.getDate();
+  d.setMonth(d.getMonth() + m);
+  if (d.getDate() !== day) d.setDate(0);
+  return d;
+}
+function dateDiff(from, to) {
+  let y=to.getFullYear()-from.getFullYear(), mo=to.getMonth()-from.getMonth(), d=to.getDate()-from.getDate();
+  if (d<0){mo--;d+=new Date(to.getFullYear(),to.getMonth(),0).getDate();}
+  if (mo<0){y--;mo+=12;}
+  return{years:y,months:mo,days:d};
+}
+function fmtDate(d) { return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); }
+function getRange(diff) {
+  const m = diff.years*12+diff.months;
+  if (m<12) return 'Less than 1 year';
+  if (m<24) return '1 – 2 years';
+  if (m<36) return '2 – 3 years';
+  return 'More than 3 years';
+}
+function stateName(code) {
+  if (code==='MA') return 'Massachusetts';
+  if (code==='NC') return 'North Carolina';
+  if (code==='CA') return 'California';
+  if (code==='NJ') return 'New Jersey';
+  if (code==='DC') return 'Washington, D.C.';
+  return STATE_NAMES[code];
+}
+
+// ─── NJ bracket ───────────────────────────────────────────────────────────────
+function getNJBracket(dob, workup) {
+  const age16=addMonths(dob,192),age16h=addMonths(dob,198),age17=addMonths(dob,204),
+        age17h=addMonths(dob,210),age18=addMonths(dob,216),age18h=addMonths(dob,222),age19=addMonths(dob,228);
+  if (workup<age16)  return null;
+  if (workup<age16h) return '0 – 6 months';
+  if (workup<age17)  return '7 – 12 months';
+  if (workup<age17h) return '13 – 18 months';
+  if (workup<age18)  return '19 – 24 months';
+  if (workup<age18h) return '25 – 30 months';
+  if (workup<age19)  return '31 – 35 months';
+  return 'More than 36 months';
+}
+
+// ─── Date input parsing / formatting ─────────────────────────────────────────
+let parsedDob = null, parsedWorkup = null;
+
+function parseDate(str) {
+  if (!str) return null;
+  str = str.trim();
+  let m,d,y,match;
+  match=str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/); if(match){[,y,m,d]=match;}
+  if(!y){match=str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/); if(match){[,m,d,y]=match;}}
+  if(!y){match=str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/); if(match){[,m,d,y]=match; y=(parseInt(y)<=30?'20':'19')+y;}}
+  if(!y){match=str.match(/^(\d{2})(\d{2})(\d{4})$/); if(match){[,m,d,y]=match;}}
+  if(!y) return null;
+  const date=new Date(`${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T12:00:00`);
+  return isNaN(date.getTime())?null:date;
+}
+function formatDisplay(dateObj) {
+  return `${String(dateObj.getMonth()+1).padStart(2,'0')}/${String(dateObj.getDate()).padStart(2,'0')}/${dateObj.getFullYear()}`;
+}
+function autoSlash(input) {
+  const pos=input.selectionStart, prev=input.value;
+  const digits=prev.replace(/\D/g,'').slice(0,8);
+  let formatted=digits;
+  if(digits.length>4) formatted=digits.slice(0,2)+'/'+digits.slice(2,4)+'/'+digits.slice(4);
+  else if(digits.length>2) formatted=digits.slice(0,2)+'/'+digits.slice(2);
+  if(formatted!==prev){input.value=formatted; const nudge=formatted.length>prev.length?pos+1:pos; input.setSelectionRange(nudge,nudge);}
+}
+function tryParseLive(input, parsedSetter) {
+  const val=input.value.trim();
+  if(val.length===10){const parsed=parseDate(val); if(parsed){input.classList.remove('invalid'); parsedSetter(parsed); return;}}
+  parsedSetter(null);
+}
+function applyDateInput(input, parsedSetter) {
+  const val=input.value.trim();
+  if(!val){input.classList.remove('invalid'); parsedSetter(null); checkReady(); return;}
+  const parsed=parseDate(val);
+  if(parsed){input.value=formatDisplay(parsed); input.classList.remove('invalid'); parsedSetter(parsed);}
+  else{input.classList.add('invalid'); parsedSetter(null);}
+  resultDiv.innerHTML=''; checkReady();
+}
+function bindDateInput(input, parsedSetter) {
+  input.addEventListener('input',()=>{autoSlash(input); input.classList.remove('invalid'); resultDiv.innerHTML=''; tryParseLive(input,parsedSetter); checkReady();});
+  input.addEventListener('paste',()=>{setTimeout(()=>applyDateInput(input,parsedSetter),0);});
+  input.addEventListener('blur', ()=>applyDateInput(input,parsedSetter));
+}
+
+// ─── Experimental features ────────────────────────────────────────────────────
+let expMvrEnabled=false, expAgeEnabled=false, parsedIssueDate=null, expAgeValue=null;
+
+function updateExpPanels(code) {
+  if (MVR_STATES.includes(code)) { mvrPanel.style.display=''; }
+  else {
+    mvrPanel.style.display='none'; mvrToggle.checked=false; expMvrEnabled=false;
+    mvrContent.style.display='none'; issueDateInput.value=''; issueDateInput.classList.remove('invalid'); parsedIssueDate=null;
+  }
+}
+mvrToggle.addEventListener('change',()=>{
+  expMvrEnabled=mvrToggle.checked; mvrContent.style.display=expMvrEnabled?'':'none';
+  if(!expMvrEnabled){issueDateInput.value=''; issueDateInput.classList.remove('invalid'); parsedIssueDate=null;}
+  resultDiv.innerHTML=''; checkReady();
+});
+ageToggle.addEventListener('change',()=>{
+  expAgeEnabled=ageToggle.checked; ageContent.style.display=expAgeEnabled?'':'none';
+  if(!expAgeEnabled){ageInput.value=''; ageInput.classList.remove('invalid'); expAgeValue=null;}
+  resultDiv.innerHTML=''; checkReady();
+});
+ageInput.addEventListener('input',()=>{
+  const raw=ageInput.value.trim(), val=parseFloat(raw);
+  if(!isNaN(val)&&val>0&&val<100){expAgeValue=val; ageInput.classList.remove('invalid');}
+  else{expAgeValue=null; if(raw) ageInput.classList.add('invalid'); else ageInput.classList.remove('invalid');}
+  resultDiv.innerHTML=''; checkReady();
+});
+ageInput.addEventListener('blur',()=>{if(ageInput.value.trim()&&expAgeValue===null) ageInput.classList.add('invalid');});
+bindDateInput(issueDateInput, v=>{parsedIssueDate=v; checkReady();});
+document.getElementById('issueDateCalBtn').addEventListener('click',()=>openCalendar(issueDateInput,v=>{parsedIssueDate=v; checkReady();}));
+
+// ─── Readiness ────────────────────────────────────────────────────────────────
+function checkReady() {
+  const ready=!!(selState.value&&parsedDob&&parsedWorkup)&&(!expMvrEnabled||!!parsedIssueDate)&&(!expAgeEnabled||expAgeValue!==null);
+  calcBtn.classList.toggle('btn-off',!ready); calcBtn.setAttribute('aria-disabled',ready?'false':'true');
+}
+function updateStateInfo(code) {
+  if(!code||!STATE_DATA[code]){stateInfo.classList.remove('show');return;}
+  const d=STATE_DATA[code],isExact=EXACT_STATES.includes(code),isNJ=code==='NJ';
+  const modeLabel=isExact?'Exact calculation':isNJ?'Months licensed (NJ)':'Range output';
+  stateInfo.innerHTML=`<strong>${stateName(code)}:</strong> Permit age <strong>${d.pL}</strong> &nbsp;·&nbsp; License age <strong>${d.lL}</strong> &nbsp;·&nbsp; ${modeLabel}`;
+  stateInfo.classList.add('show');
+}
+function clearAll() {
+  selState.value=''; dobInput.value=''; workupInput.value='';
+  dobInput.classList.remove('invalid'); workupInput.classList.remove('invalid');
+  parsedDob=null; parsedWorkup=null; resultDiv.innerHTML=''; stateInfo.classList.remove('show');
+  mvrToggle.checked=false; expMvrEnabled=false; mvrContent.style.display='none'; mvrPanel.style.display='none';
+  issueDateInput.value=''; issueDateInput.classList.remove('invalid'); parsedIssueDate=null;
+  ageToggle.checked=false; expAgeEnabled=false; ageContent.style.display='none';
+  ageInput.value=''; ageInput.classList.remove('invalid'); expAgeValue=null;
+  checkReady();
+}
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+const ICON_CHECK=`<svg viewBox="0 0 20 20" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10.5l2.5 2.5 4.5-5"/></svg>`;
+const ICON_WARN =`<svg viewBox="0 0 20 20" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5L18.5 17H1.5L10 2.5z"/><line x1="10" y1="9" x2="10" y2="13"/><circle cx="10" cy="15.2" r=".8" fill="var(--warn)" stroke="none"/></svg>`;
+const ICON_X    =`<svg viewBox="0 0 20 20" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M7 7l6 6M13 7l-6 6"/></svg>`;
+
+// ─── Event listeners ──────────────────────────────────────────────────────────
+selState.addEventListener('change',()=>{resultDiv.innerHTML=''; updateStateInfo(selState.value); updateExpPanels(selState.value); checkReady();});
+bindDateInput(dobInput,    v=>{parsedDob   =v;});
+bindDateInput(workupInput, v=>{parsedWorkup=v;});
+clearBtn.addEventListener('click',clearAll);
+document.getElementById('dobCalBtn').addEventListener('click',   ()=>openCalendar(dobInput,   v=>{parsedDob   =v;}));
+document.getElementById('workupCalBtn').addEventListener('click',()=>openCalendar(workupInput,v=>{parsedWorkup=v;}));
+
+// ─── Calculate (years licensed) ───────────────────────────────────────────────
+calcBtn.addEventListener('click',()=>{
+  if(calcBtn.classList.contains('btn-off')) return;
+  const code=selState.value, cfg=STATE_DATA[code], isExact=EXACT_STATES.includes(code), isNJ=code==='NJ';
+  const dob=parsedDob, workup=parsedWorkup;
+  let html='';
+
+  // Experimental: MVR Issue Date
+  if(expMvrEnabled&&parsedIssueDate){
+    if(workup<parsedIssueDate){
+      html=`<div class="result danger"><div class="result-hd">${ICON_X}<span class="result-title">Workup date is before the issue date</span></div><div class="result-body">The workup date (${fmtDate(workup)}) falls before the original DL issue date (${fmtDate(parsedIssueDate)}). Please verify both dates.</div></div>`;
+    } else {
+      const diff=dateDiff(parsedIssueDate,workup);
+      const tiles=[`<div class="tile"><div class="tile-num">${diff.years}</div><div class="tile-lbl">${diff.years===1?'year':'years'}</div></div>`];
+      html=`<div class="result success"><div class="result-hd">${ICON_CHECK}<span class="result-title">Years licensed — MVR issue date</span></div><div class="tiles">${tiles.join('')}</div><div class="meta">Based on original DL issue date: ${fmtDate(parsedIssueDate)}</div></div>`;
+    }
+    resultDiv.innerHTML=html; return;
+  }
+
+  // Experimental: Age First Licensed
+  if(expAgeEnabled&&expAgeValue!==null){
+    const enteredMonths=Math.round(expAgeValue*12);
+    if(enteredMonths<cfg.pM){
+      html=`<div class="result danger"><div class="result-hd">${ICON_X}<span class="result-title">Not yet eligible for a learner's permit</span></div><div class="result-body">The entered age of <strong>${expAgeValue}</strong> is below the minimum permit age for ${stateName(code)} (age <strong>${cfg.pL}</strong>). Please verify the reported age.</div></div>`;
+    } else if(enteredMonths<cfg.lM){
+      html=`<div class="result warn"><div class="result-hd">${ICON_WARN}<span class="result-title">Learner's permit age only — not yet licensed</span></div><div class="result-body">The entered age of <strong>${expAgeValue}</strong> falls within the learner's permit range for ${stateName(code)}. The minimum license age is <strong>${cfg.lL}</strong>.<br><br>Years licensed cannot be calculated from a permit-only age.</div></div>`;
+    } else {
+      const licenseDate=addMonths(dob,enteredMonths);
+      if(workup<licenseDate){
+        html=`<div class="result warn"><div class="result-hd">${ICON_WARN}<span class="result-title">Not yet licensed as of workup date</span></div><div class="result-body">Based on the reported license age of ${expAgeValue}, this driver would not have been licensed until ${fmtDate(licenseDate)}.<br><br><strong style="color:var(--warn)">License eligible from: ${fmtDate(licenseDate)}</strong></div></div>`;
+      } else {
+        const diff=dateDiff(licenseDate,workup);
+        const tiles=[`<div class="tile"><div class="tile-num">${diff.years}</div><div class="tile-lbl">${diff.years===1?'year':'years'}</div></div>`];
+        html=`<div class="result success"><div class="result-hd">${ICON_CHECK}<span class="result-title">Years licensed — reported age</span></div><div class="tiles">${tiles.join('')}</div><div class="meta">Based on reported first license age: ${expAgeValue} · Calculated license date: ${fmtDate(licenseDate)}</div></div>`;
+      }
+    }
+    resultDiv.innerHTML=html; return;
+  }
+
+  // NJ
+  if(isNJ){
+    const bracket=getNJBracket(dob,workup), permitDate=addMonths(dob,cfg.pM);
+    if(bracket===null){
+      html=`<div class="result danger"><div class="result-hd">${ICON_X}<span class="result-title">Not yet eligible for a learner's permit</span></div><div class="result-body">As of the workup date, this driver has not yet reached the minimum permit age in New Jersey (age 16).<br><br><strong style="color:var(--danger)">Permit eligible from: ${fmtDate(permitDate)}</strong></div></div>`;
+    } else {
+      html=`<div class="result success"><div class="result-hd">${ICON_CHECK}<span class="result-title">Months licensed</span></div><div class="range-badge">${bracket}</div><div class="meta">Bracket keyed to driver's age at workup date</div></div>`;
+    }
+  } else if(isExact){
+    const licenseDate=addMonths(dob,cfg.lM), permitDate=addMonths(dob,cfg.pM);
+    if(workup>=licenseDate){
+      const diff=dateDiff(licenseDate,workup);
+      html=`<div class="result success"><div class="result-hd">${ICON_CHECK}<span class="result-title">Years licensed</span></div><div class="tiles"><div class="tile"><div class="tile-num">${diff.years}</div><div class="tile-lbl">${diff.years===1?'year':'years'}</div></div></div><div class="meta">License eligible from ${fmtDate(licenseDate)}</div></div>`;
+    } else if(workup>=permitDate){
+      html=`<div class="result warn"><div class="result-hd">${ICON_WARN}<span class="result-title">Learner's permit age only — not yet licensed</span></div><div class="result-body">As of the workup date, this driver is old enough for a learner's permit in ${stateName(code)} but has not yet reached the minimum age for a regular license.<br><br><strong style="color:var(--warn)">Regular license eligible from: ${fmtDate(licenseDate)}</strong></div></div>`;
+    } else {
+      html=`<div class="result danger"><div class="result-hd">${ICON_X}<span class="result-title">Not yet eligible for a learner's permit</span></div><div class="result-body">As of the workup date, this driver has not yet reached the minimum age for a learner's permit in ${stateName(code)}.<br><br><strong style="color:var(--danger)">Permit eligible from: ${fmtDate(addMonths(dob,cfg.pM))}</strong></div></div>`;
+    }
+  } else {
+    const licenseDate=addMonths(dob,cfg.lM), permitDate=addMonths(dob,cfg.pM);
+    if(workup>=licenseDate){
+      const diff=dateDiff(licenseDate,workup);
+      html=`<div class="result success"><div class="result-hd">${ICON_CHECK}<span class="result-title">Years licensed</span></div><div class="range-badge">${getRange(diff)}</div><div class="meta">License eligible from ${fmtDate(licenseDate)}<span class="dot">·</span>${diff.years} yr ${diff.months} mo ${diff.days} d as of workup date</div></div>`;
+    } else if(workup>=permitDate){
+      html=`<div class="result warn"><div class="result-hd">${ICON_WARN}<span class="result-title">Learner's permit age only — not yet licensed</span></div><div class="result-body">As of the workup date, this driver is old enough for a learner's permit in ${stateName(code)} but has not yet reached the minimum age for a regular license.<br><br><strong style="color:var(--warn)">Regular license eligible from: ${fmtDate(licenseDate)}</strong></div></div>`;
+    } else {
+      html=`<div class="result danger"><div class="result-hd">${ICON_X}<span class="result-title">Not yet eligible for a learner's permit</span></div><div class="result-body">As of the workup date, this driver has not yet reached the minimum age for a learner's permit in ${stateName(code)}.<br><br><strong style="color:var(--danger)">Permit eligible from: ${fmtDate(permitDate)}</strong></div></div>`;
+    }
+  }
+  resultDiv.innerHTML=html;
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PREMIUM WORKUP CALCULATOR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const premOldInput = document.getElementById('premOldInput');
+const premNewInput = document.getElementById('premNewInput');
+const premCalcBtn  = document.getElementById('premCalcBtn');
+const premClearBtn = document.getElementById('premClearBtn');
+const premResult   = document.getElementById('premResult');
+
+let parsedOldPrem = null;
+let parsedNewPrem = null;
+
+function parseCurrency(str) {
+  if (!str || !str.trim()) return null;
+  const cleaned = str.replace(/[$,\s]/g, '');
+  const val = parseFloat(cleaned);
+  if (isNaN(val) || val <= 0) return null;
+  return val;
+}
+
+function fmtCurrency(val) {
+  return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function premCheckReady() {
+  const ready = parsedOldPrem !== null && parsedNewPrem !== null;
+  premCalcBtn.classList.toggle('btn-off', !ready);
+  premCalcBtn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+}
+
+function applyPremInput(input, parsedSetter) {
+  const val = parseCurrency(input.value);
+  if (val !== null) {
+    input.value = fmtCurrency(val);
+    input.classList.remove('invalid');
+    parsedSetter(val);
+  } else if (input.value.trim()) {
+    input.classList.add('invalid');
+    parsedSetter(null);
+  } else {
+    input.classList.remove('invalid');
+    parsedSetter(null);
+  }
+  premResult.innerHTML = '';
+  premCheckReady();
+}
+
+function bindPremInput(input, parsedSetter) {
+  input.addEventListener('input', () => {
+    input.classList.remove('invalid');
+    const val = parseCurrency(input.value);
+    parsedSetter(val);
+    premResult.innerHTML = '';
+    premCheckReady();
+  });
+  input.addEventListener('blur',  () => applyPremInput(input, parsedSetter));
+  input.addEventListener('paste', () => { setTimeout(() => applyPremInput(input, parsedSetter), 0); });
+}
+
+bindPremInput(premOldInput, v => { parsedOldPrem = v; });
+bindPremInput(premNewInput, v => { parsedNewPrem = v; });
+
+premClearBtn.addEventListener('click', () => {
+  premOldInput.value = ''; premNewInput.value = '';
+  premOldInput.classList.remove('invalid'); premNewInput.classList.remove('invalid');
+  parsedOldPrem = null; parsedNewPrem = null;
+  premResult.innerHTML = '';
+  premCheckReady();
+});
+
+const PREM_ICON_UP   = `<svg viewBox="0 0 20 20" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 4 10 11 6 7 3 10"/><polyline points="13 4 17 4 17 8"/></svg>`;
+const PREM_ICON_DOWN = `<svg viewBox="0 0 20 20" fill="none" stroke="var(--danger)"  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 10 6 13 10 9 17 16"/><polyline points="13 16 17 16 17 12"/></svg>`;
+const PREM_ICON_FLAT = `<svg viewBox="0 0 20 20" fill="none" stroke="var(--text)"    stroke-width="2" stroke-linecap="round"><line x1="3" y1="10" x2="17" y2="10"/></svg>`;
+
+premCalcBtn.addEventListener('click', () => {
+  if (premCalcBtn.classList.contains('btn-off')) return;
+  if (!parsedOldPrem || !parsedNewPrem) return;
+
+  const rawPct = ((parsedNewPrem / parsedOldPrem) - 1) * 100;
+  const pct    = Math.round(rawPct * 10) / 10;
+  const sign   = pct > 0 ? '+' : '';
+  const oldFmt = fmtCurrency(parsedOldPrem);
+  const newFmt = fmtCurrency(parsedNewPrem);
+
+  let html = '';
+  if (pct > 0) {
+    html = `<div class="result success">
+      <div class="result-hd">${PREM_ICON_UP}<span class="result-title">Premium increase</span></div>
+      <div class="prem-pct increase">${sign}${pct.toFixed(1)}%</div>
+      <div class="meta">$${oldFmt} &nbsp;→&nbsp; $${newFmt}</div>
+    </div>`;
+  } else if (pct < 0) {
+    html = `<div class="result danger">
+      <div class="result-hd">${PREM_ICON_DOWN}<span class="result-title">Premium decrease</span></div>
+      <div class="prem-pct decrease">${pct.toFixed(1)}%</div>
+      <div class="meta">$${oldFmt} &nbsp;→&nbsp; $${newFmt}</div>
+    </div>`;
+  } else {
+    html = `<div class="result success">
+      <div class="result-hd">${PREM_ICON_FLAT}<span class="result-title">No change</span></div>
+      <div class="prem-pct flat">0.0%</div>
+      <div class="meta">$${oldFmt} &nbsp;→&nbsp; $${newFmt}</div>
+    </div>`;
+  }
+  premResult.innerHTML = html;
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  CALENDAR (shared between both calculators)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const calPopup = document.getElementById('calPopup');
+const calGrid  = document.getElementById('calGrid');
+const calLabel = document.getElementById('calMonthLabel');
+let calActiveInput=null, calActiveSetter=null, calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function openCalendar(input, setter) {
+  if (calPopup.style.display!=='none'&&calActiveInput===input){closeCalendar();return;}
+  calActiveInput=input; calActiveSetter=setter;
+  const current=parseDate(input.value);
+  if(current){calYear=current.getFullYear(); calMonth=current.getMonth();}
+  else{const n=new Date(); calYear=n.getFullYear(); calMonth=n.getMonth();}
+  renderCalendar(); positionCalendar(input);
+}
+function closeCalendar(){calPopup.style.display='none'; calActiveInput=null; calActiveSetter=null;}
+function positionCalendar(input){
+  calPopup.style.display='block';
+  const rect=input.getBoundingClientRect(), popW=calPopup.offsetWidth, popH=calPopup.offsetHeight;
+  let top=rect.bottom+6, left=rect.left;
+  if(left+popW>window.innerWidth-8) left=window.innerWidth-popW-8;
+  if(top+popH>window.innerHeight-8) top=rect.top-popH-6;
+  calPopup.style.top=top+'px'; calPopup.style.left=left+'px';
+}
+function renderCalendar(){
+  calLabel.textContent=`${MONTHS[calMonth]} ${calYear}`; calGrid.innerHTML='';
+  const firstDay=new Date(calYear,calMonth,1).getDay(), daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const now=new Date(), todayK=`${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  const selD=calActiveInput?parseDate(calActiveInput.value):null;
+  const selK=selD?`${selD.getFullYear()}-${selD.getMonth()}-${selD.getDate()}`:null;
+  for(let i=0;i<firstDay;i++){const el=document.createElement('div');el.className='cal-day empty';calGrid.appendChild(el);}
+  for(let d=1;d<=daysInMonth;d++){
+    const btn=document.createElement('button'); btn.type='button'; btn.className='cal-day'; btn.textContent=d;
+    const key=`${calYear}-${calMonth}-${d}`;
+    if(key===todayK) btn.classList.add('today');
+    if(key===selK)   btn.classList.add('selected');
+    btn.addEventListener('click',()=>{
+      const picked=new Date(calYear,calMonth,d,12,0,0);
+      calActiveInput.value=formatDisplay(picked); calActiveInput.classList.remove('invalid');
+      calActiveSetter(picked); resultDiv.innerHTML=''; checkReady();
+      closeCalendar(); calActiveInput.focus();
+    });
+    calGrid.appendChild(btn);
+  }
+}
+document.getElementById('calPrevMonth').addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();});
+document.getElementById('calNextMonth').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
+document.getElementById('calPrevYear').addEventListener('click', ()=>{calYear--;renderCalendar();});
+document.getElementById('calNextYear').addEventListener('click', ()=>{calYear++;renderCalendar();});
+document.addEventListener('mousedown',e=>{
+  if(calPopup.style.display==='none') return;
+  if(calPopup.contains(e.target)) return;
+  if(e.target.closest('.cal-icon-btn')) return;
+  closeCalendar();
+});
+</script>
+</body>
+</html>
