@@ -178,6 +178,35 @@
   }
   .currency-input { padding-left:28px !important; }
 
+  .fee-entry-row { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:start; }
+  .fee-add-btn {
+    background:transparent; color:var(--muted);
+    border:1px solid var(--border); border-radius:8px;
+    font-size:13px; font-weight:500; padding:10px 14px; cursor:pointer;
+    transition:background .15s, color .15s, border-color .15s;
+    display:flex; align-items:center; gap:7px; white-space:nowrap;
+  }
+  .fee-add-btn:hover { background:var(--clear-hover-bg); color:var(--clear-hover); border-color:var(--clear-hover-bd); }
+  .fee-add-btn svg { width:14px; height:14px; flex-shrink:0; }
+  .fee-list {
+    display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;
+  }
+  .fee-pill {
+    display:inline-flex; align-items:center; gap:7px;
+    background:var(--range-bg); border:1px solid var(--border);
+    border-radius:999px; color:var(--text); font-size:12px; font-weight:500;
+    padding:6px 8px 6px 11px;
+  }
+  .fee-remove-btn {
+    width:18px; height:18px; border:none; border-radius:50%;
+    background:var(--surface); color:var(--meta); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s, color .15s;
+  }
+  .fee-remove-btn:hover { background:var(--surface-2); color:var(--text); }
+  .fee-total { font-size:12px; color:var(--meta); margin-top:9px; display:none; }
+  .fee-total.show { display:block; }
+
   /* ── Button row ───────────────────────────────────────── */
   .btn-row { display:grid; grid-template-columns:1fr auto; gap:10px; margin-top:1.25rem; }
   .btn {
@@ -499,6 +528,23 @@
         <div class="currency-wrap">
           <input type="text" class="currency-input" id="premNewInput" placeholder="0.00" autocomplete="off" inputmode="decimal" />
         </div>
+      </div>
+
+      <div class="field" style="margin-top:1.1rem;margin-bottom:0">
+        <label for="premFeeInput">Fixed Fees</label>
+        <div class="fee-entry-row">
+          <div class="currency-wrap">
+            <input type="text" class="currency-input" id="premFeeInput" placeholder="0.00" autocomplete="off" inputmode="decimal" />
+          </div>
+          <button class="fee-add-btn" id="premAddFeeBtn" type="button">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="10" y1="4" x2="10" y2="16"/><line x1="4" y1="10" x2="16" y2="10"/>
+            </svg>
+            Add fee
+          </button>
+        </div>
+        <div class="fee-list" id="premFeeList"></div>
+        <div class="fee-total" id="premFeeTotal"></div>
       </div>
 
       <!-- MVR expanded content — lives after agePanel so it doesn't push it down -->
@@ -981,12 +1027,17 @@ calcBtn.addEventListener('click',()=>{
 
 const premOldInput = document.getElementById('premOldInput');
 const premNewInput = document.getElementById('premNewInput');
+const premFeeInput = document.getElementById('premFeeInput');
+const premAddFeeBtn = document.getElementById('premAddFeeBtn');
+const premFeeList = document.getElementById('premFeeList');
+const premFeeTotal = document.getElementById('premFeeTotal');
 const premCalcBtn  = document.getElementById('premCalcBtn');
 const premClearBtn = document.getElementById('premClearBtn');
 const premResult   = document.getElementById('premResult');
 
 let parsedOldPrem = null;
 let parsedNewPrem = null;
+let fixedFees = [];
 
 function parseCurrency(str) {
   if (!str || !str.trim()) return null;
@@ -1038,10 +1089,74 @@ function bindPremInput(input, parsedSetter) {
 bindPremInput(premOldInput, v => { parsedOldPrem = v; });
 bindPremInput(premNewInput, v => { parsedNewPrem = v; });
 
+function fixedFeeTotal() {
+  return fixedFees.reduce((sum, fee) => sum + fee, 0);
+}
+
+function renderFixedFees() {
+  premFeeList.innerHTML = fixedFees.map((fee, index) => `
+    <span class="fee-pill">
+      $${fmtCurrency(fee)}
+      <button class="fee-remove-btn" type="button" data-fee-index="${index}" aria-label="Remove $${fmtCurrency(fee)} fixed fee">&times;</button>
+    </span>
+  `).join('');
+
+  const total = fixedFeeTotal();
+  premFeeTotal.textContent = total > 0 ? `Fixed fees excluded: $${fmtCurrency(total)}` : '';
+  premFeeTotal.classList.toggle('show', total > 0);
+  premResult.innerHTML = '';
+  premCheckReady();
+}
+
+function addFixedFee() {
+  const fee = parseCurrency(premFeeInput.value);
+  if (fee === null) {
+    if (premFeeInput.value.trim()) premFeeInput.classList.add('invalid');
+    return;
+  }
+  fixedFees.push(fee);
+  premFeeInput.value = '';
+  premFeeInput.classList.remove('invalid');
+  renderFixedFees();
+}
+
+premAddFeeBtn.addEventListener('click', addFixedFee);
+premFeeInput.addEventListener('input', () => {
+  premFeeInput.classList.remove('invalid');
+  premResult.innerHTML = '';
+});
+premFeeInput.addEventListener('blur', () => {
+  if (!premFeeInput.value.trim()) {
+    premFeeInput.classList.remove('invalid');
+    return;
+  }
+  const fee = parseCurrency(premFeeInput.value);
+  if (fee !== null) {
+    premFeeInput.value = fmtCurrency(fee);
+    premFeeInput.classList.remove('invalid');
+  } else {
+    premFeeInput.classList.add('invalid');
+  }
+});
+premFeeInput.addEventListener('keydown', event => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    addFixedFee();
+  }
+});
+premFeeList.addEventListener('click', event => {
+  const btn = event.target.closest('.fee-remove-btn');
+  if (!btn) return;
+  fixedFees.splice(Number(btn.dataset.feeIndex), 1);
+  renderFixedFees();
+});
+
 premClearBtn.addEventListener('click', () => {
-  premOldInput.value = ''; premNewInput.value = '';
-  premOldInput.classList.remove('invalid'); premNewInput.classList.remove('invalid');
+  premOldInput.value = ''; premNewInput.value = ''; premFeeInput.value = '';
+  premOldInput.classList.remove('invalid'); premNewInput.classList.remove('invalid'); premFeeInput.classList.remove('invalid');
   parsedOldPrem = null; parsedNewPrem = null;
+  fixedFees = [];
+  renderFixedFees();
   premResult.innerHTML = '';
   premCheckReady();
 });
@@ -1054,11 +1169,24 @@ premCalcBtn.addEventListener('click', () => {
   if (premCalcBtn.classList.contains('btn-off')) return;
   if (!parsedOldPrem || !parsedNewPrem) return;
 
-  const rawPct = ((parsedNewPrem / parsedOldPrem) - 1) * 100;
+  const totalFees = fixedFeeTotal();
+  const adjustedOldPrem = parsedOldPrem - totalFees;
+  const adjustedNewPrem = parsedNewPrem - totalFees;
+
+  if (adjustedOldPrem <= 0 || adjustedNewPrem < 0) {
+    premResult.innerHTML = `<div class="result warn">
+      <div class="result-hd">${ICON_WARN}<span class="result-title">Fixed fees exceed premium</span></div>
+      <div class="result-body">The fixed fee total of <strong>$${fmtCurrency(totalFees)}</strong> leaves an adjusted old premium of <strong>$${fmtCurrency(adjustedOldPrem)}</strong> and adjusted new premium of <strong>$${fmtCurrency(adjustedNewPrem)}</strong>. Please verify the fees before calculating.</div>
+    </div>`;
+    return;
+  }
+
+  const rawPct = ((adjustedNewPrem / adjustedOldPrem) - 1) * 100;
   const pct    = Math.round(rawPct * 10) / 10;
   const sign   = pct > 0 ? '+' : '';
-  const oldFmt = fmtCurrency(parsedOldPrem);
-  const newFmt = fmtCurrency(parsedNewPrem);
+  const oldFmt = fmtCurrency(adjustedOldPrem);
+  const newFmt = fmtCurrency(adjustedNewPrem);
+  const feeMeta = totalFees > 0 ? `<div class="meta">Fixed fees excluded: $${fmtCurrency(totalFees)}</div>` : '';
 
   let html = '';
   if (pct > 0) {
@@ -1066,18 +1194,21 @@ premCalcBtn.addEventListener('click', () => {
       <div class="result-hd">${PREM_ICON_UP}<span class="result-title">Premium increase</span></div>
       <div class="prem-pct increase">${sign}${pct.toFixed(1)}%</div>
       <div class="meta">$${oldFmt} &nbsp;→&nbsp; $${newFmt}</div>
+      ${feeMeta}
     </div>`;
   } else if (pct < 0) {
     html = `<div class="result danger">
       <div class="result-hd">${PREM_ICON_DOWN}<span class="result-title">Premium decrease</span></div>
       <div class="prem-pct decrease">${pct.toFixed(1)}%</div>
       <div class="meta">$${oldFmt} &nbsp;→&nbsp; $${newFmt}</div>
+      ${feeMeta}
     </div>`;
   } else {
     html = `<div class="result success">
       <div class="result-hd">${PREM_ICON_FLAT}<span class="result-title">No change</span></div>
       <div class="prem-pct flat">0.0%</div>
       <div class="meta">$${oldFmt} &nbsp;→&nbsp; $${newFmt}</div>
+      ${feeMeta}
     </div>`;
   }
   premResult.innerHTML = html;
