@@ -126,6 +126,9 @@
     border-radius:14px; padding:1.5rem; margin-bottom:1rem;
     transition:background .2s, border-color .2s;
   }
+  @media (min-width: 961px) {
+    .years-card { min-height:346.2px; }
+  }
 
   /* ── Form elements ────────────────────────────────────── */
   .field { margin-bottom:1.1rem; }
@@ -375,7 +378,7 @@
 
     <p class="important-note"><span class="red">IMPORTANT:</span> Before using this calculator, please refer to guidelines for state specifics.</p>
 
-    <div class="card">
+    <div class="card years-card">
       <div class="field">
         <label for="stateSelect">State</label>
         <select id="stateSelect">
