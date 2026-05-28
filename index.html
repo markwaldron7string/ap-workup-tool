@@ -308,6 +308,19 @@
   .toggle-switch input:checked + .toggle-track { background:var(--blue); }
   .toggle-switch input:checked + .toggle-track::before { transform:translateX(16px); }
 
+  /* ── Mutual exclusivity: disabled panel ───────────────── */
+  /* Disabled toggle is clickable — clicking it swaps the active mode */
+  .exp-panel.panel-disabled .toggle-switch { opacity:0.4; }
+  .exp-panel.panel-disabled .exp-title { color:var(--meta); opacity:0.55; }
+
+  /* ── DOB optional indicator (when MVR override is active) */
+  .dob-optional label::after {
+    content:' — optional';
+    font-weight:400; text-transform:none; letter-spacing:0;
+    font-size:10px; opacity:0.65;
+  }
+  .dob-optional .date-input { opacity:0.55; }
+
   .red { color:#e03030; }
   [data-theme="light"] .red { color:#cc2222; }
 </style>
@@ -350,7 +363,7 @@
         </svg>
       </button>
     </header>
-</br>
+
     <p class="important-note"><span class="red">IMPORTANT:</span> Before using this calculator, please refer to guidelines for state specifics.</p>
 
     <div class="card">
@@ -408,19 +421,6 @@
             <input type="checkbox" id="mvrToggle"><span class="toggle-track"></span>
           </label>
         </div>
-        <div class="exp-content" id="mvrContent" style="display:none">
-          <p class="exp-hint">The MVR shows the original license issue date. Enter it below to calculate years licensed directly — bypassing the DOB estimate.</p>
-          <label for="issueDateInput">Original DL Issue Date</label>
-          <div class="date-wrap" style="margin-top:7px">
-            <input type="text" class="date-input" id="issueDateInput" placeholder="MM/DD/YYYY" autocomplete="off" inputmode="numeric" />
-            <button class="cal-icon-btn" id="issueDateCalBtn" type="button" aria-label="Open calendar" tabindex="-1">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-            </button>
-          </div>
-        </div>
       </div>
 
       <div class="exp-panel" id="agePanel">
@@ -434,6 +434,21 @@
           <p class="exp-hint">A note or MVR indicates the age at which the driver was first licensed. Enter it below — decimals accepted (e.g. 16.5).</p>
           <label for="ageInput">Age When First Licensed</label>
           <input type="text" class="date-input" id="ageInput" placeholder="e.g.  16  or  16.5" autocomplete="off" style="margin-top:7px" />
+        </div>
+      </div>
+
+      <!-- MVR expanded content — lives after agePanel so it doesn't push it down -->
+      <div class="exp-content" id="mvrContent" style="display:none">
+        <p class="exp-hint">The MVR shows the original license issue date. Enter it below to calculate years licensed directly — bypassing the DOB estimate.</p>
+        <label for="issueDateInput">Original DL Issue Date</label>
+        <div class="date-wrap" style="margin-top:7px">
+          <input type="text" class="date-input" id="issueDateInput" placeholder="MM/DD/YYYY" autocomplete="off" inputmode="numeric" />
+          <button class="cal-icon-btn" id="issueDateCalBtn" type="button" aria-label="Open calendar" tabindex="-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -478,7 +493,7 @@
     </header>
 
     <!-- Spacer to align card with the left panel's card (accounts for IMPORTANT note height) -->
-    <div style="margin-bottom:2.75rem;visibility:hidden;font-size:13px;">placeholder</div>
+    <div style="margin-bottom:1.25rem;visibility:hidden;font-size:13px;">placeholder</div>
 
     <div class="card">
       <div class="field">
@@ -491,6 +506,21 @@
         <label for="premNewInput">New Premium</label>
         <div class="currency-wrap">
           <input type="text" class="currency-input" id="premNewInput" placeholder="0.00" autocomplete="off" inputmode="decimal" />
+        </div>
+      </div>
+
+      <!-- MVR expanded content — lives after agePanel so it doesn't push it down -->
+      <div class="exp-content" id="mvrContent" style="display:none">
+        <p class="exp-hint">The MVR shows the original license issue date. Enter it below to calculate years licensed directly — bypassing the DOB estimate.</p>
+        <label for="issueDateInput">Original DL Issue Date</label>
+        <div class="date-wrap" style="margin-top:7px">
+          <input type="text" class="date-input" id="issueDateInput" placeholder="MM/DD/YYYY" autocomplete="off" inputmode="numeric" />
+          <button class="cal-icon-btn" id="issueDateCalBtn" type="button" aria-label="Open calendar" tabindex="-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -637,6 +667,7 @@ const mvrPanel       = document.getElementById('mvrPanel');
 const mvrToggle      = document.getElementById('mvrToggle');
 const mvrContent     = document.getElementById('mvrContent');
 const issueDateInput = document.getElementById('issueDateInput');
+const agePanel       = document.getElementById('agePanel');
 const ageToggle      = document.getElementById('ageToggle');
 const ageContent     = document.getElementById('ageContent');
 const ageInput       = document.getElementById('ageInput');
@@ -735,20 +766,52 @@ function bindDateInput(input, parsedSetter) {
 let expMvrEnabled=false, expAgeEnabled=false, parsedIssueDate=null, expAgeValue=null;
 
 function updateExpPanels(code) {
-  if (MVR_STATES.includes(code)) { mvrPanel.style.display=''; }
-  else {
-    mvrPanel.style.display='none'; mvrToggle.checked=false; expMvrEnabled=false;
+  if (MVR_STATES.includes(code)) {
+    mvrPanel.style.display='';
+    mvrPanel.classList.toggle('panel-disabled', expAgeEnabled);
+  } else {
+    mvrPanel.style.display='none'; mvrPanel.classList.remove('panel-disabled');
+    mvrToggle.checked=false; expMvrEnabled=false;
     mvrContent.style.display='none'; issueDateInput.value=''; issueDateInput.classList.remove('invalid'); parsedIssueDate=null;
+    dobInput.closest('.field').classList.remove('dob-optional');
+    agePanel.classList.remove('panel-disabled');
   }
 }
 mvrToggle.addEventListener('change',()=>{
-  expMvrEnabled=mvrToggle.checked; mvrContent.style.display=expMvrEnabled?'':'none';
-  if(!expMvrEnabled){issueDateInput.value=''; issueDateInput.classList.remove('invalid'); parsedIssueDate=null;}
+  if(mvrToggle.checked){
+    if(expAgeEnabled){
+      ageToggle.checked=false; expAgeEnabled=false; ageContent.style.display='none';
+      ageInput.value=''; ageInput.classList.remove('invalid'); expAgeValue=null;
+    }
+    expMvrEnabled=true; mvrContent.style.display='';
+    mvrPanel.classList.remove('panel-disabled');
+    agePanel.classList.add('panel-disabled');
+    dobInput.closest('.field').classList.add('dob-optional');
+  } else {
+    expMvrEnabled=false; mvrContent.style.display='none';
+    issueDateInput.value=''; issueDateInput.classList.remove('invalid'); parsedIssueDate=null;
+    agePanel.classList.remove('panel-disabled');
+    dobInput.closest('.field').classList.remove('dob-optional');
+  }
   resultDiv.innerHTML=''; checkReady();
 });
 ageToggle.addEventListener('change',()=>{
-  expAgeEnabled=ageToggle.checked; ageContent.style.display=expAgeEnabled?'':'none';
-  if(!expAgeEnabled){ageInput.value=''; ageInput.classList.remove('invalid'); expAgeValue=null;}
+  if(ageToggle.checked){
+    if(expMvrEnabled){
+      mvrToggle.checked=false; expMvrEnabled=false; mvrContent.style.display='none';
+      issueDateInput.value=''; issueDateInput.classList.remove('invalid'); parsedIssueDate=null;
+      dobInput.closest('.field').classList.remove('dob-optional');
+    }
+    expAgeEnabled=true; ageContent.style.display='';
+    agePanel.classList.remove('panel-disabled');
+    if(mvrPanel.style.display!=='none') mvrPanel.classList.add('panel-disabled');
+    dobInput.closest('.field').classList.add('dob-optional');
+  } else {
+    expAgeEnabled=false; ageContent.style.display='none';
+    ageInput.value=''; ageInput.classList.remove('invalid'); expAgeValue=null;
+    if(mvrPanel.style.display!=='none') mvrPanel.classList.remove('panel-disabled');
+    dobInput.closest('.field').classList.remove('dob-optional');
+  }
   resultDiv.innerHTML=''; checkReady();
 });
 ageInput.addEventListener('input',()=>{
@@ -763,7 +826,10 @@ document.getElementById('issueDateCalBtn').addEventListener('click',()=>openCale
 
 // ─── Readiness ────────────────────────────────────────────────────────────────
 function checkReady() {
-  const ready=!!(selState.value&&parsedDob&&parsedWorkup)&&(!expMvrEnabled||!!parsedIssueDate)&&(!expAgeEnabled||expAgeValue!==null);
+  const dobOk = (expMvrEnabled || expAgeEnabled) ? true : !!parsedDob;
+  const ready = !!(selState.value && dobOk && parsedWorkup)
+    && (!expMvrEnabled || !!parsedIssueDate)
+    && (!expAgeEnabled || expAgeValue !== null);
   calcBtn.classList.toggle('btn-off',!ready); calcBtn.setAttribute('aria-disabled',ready?'false':'true');
 }
 function updateStateInfo(code) {
@@ -776,10 +842,13 @@ function updateStateInfo(code) {
 function clearAll() {
   selState.value=''; dobInput.value=''; workupInput.value='';
   dobInput.classList.remove('invalid'); workupInput.classList.remove('invalid');
+  dobInput.closest('.field').classList.remove('dob-optional');
   parsedDob=null; parsedWorkup=null; resultDiv.innerHTML=''; stateInfo.classList.remove('show');
   mvrToggle.checked=false; expMvrEnabled=false; mvrContent.style.display='none'; mvrPanel.style.display='none';
+  mvrPanel.classList.remove('panel-disabled');
   issueDateInput.value=''; issueDateInput.classList.remove('invalid'); parsedIssueDate=null;
   ageToggle.checked=false; expAgeEnabled=false; ageContent.style.display='none';
+  agePanel.classList.remove('panel-disabled');
   ageInput.value=''; ageInput.classList.remove('invalid'); expAgeValue=null;
   checkReady();
 }
@@ -818,6 +887,7 @@ calcBtn.addEventListener('click',()=>{
 
   // Experimental: Age First Licensed
   if(expAgeEnabled&&expAgeValue!==null){
+    if(!dob){html=`<div class="result warn"><div class="result-hd">${ICON_WARN}<span class="result-title">Date of birth required</span></div><div class="result-body">Please enter the driver's date of birth. It's needed to calculate years licensed from the reported age of <strong>${expAgeValue}</strong>.</div></div>`;resultDiv.innerHTML=html;return;}
     const enteredMonths=Math.round(expAgeValue*12);
     if(enteredMonths<cfg.pM){
       html=`<div class="result danger"><div class="result-hd">${ICON_X}<span class="result-title">Not yet eligible for a learner's permit</span></div><div class="result-body">The entered age of <strong>${expAgeValue}</strong> is below the minimum permit age for ${stateName(code)} (age <strong>${cfg.pL}</strong>). Please verify the reported age.</div></div>`;
