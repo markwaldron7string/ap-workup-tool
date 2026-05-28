@@ -76,10 +76,16 @@
   }
 
   /* ── Two-column page layout ───────────────────────────── */
+  .page-note {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 0;
+    text-align:center;
+  }
   .page-grid {
     max-width: 1240px;
     margin: 0 auto;
-    padding: 2.5rem 1.5rem 4rem;
+    padding: 1.25rem 1.5rem 4rem;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2.5rem;
@@ -118,7 +124,7 @@
   [data-theme="light"] .icon-sun  { display:block; }
   [data-theme="light"] .icon-moon { display:none; }
 
-  .important-note { font-size:13px; font-weight:600; color:var(--muted); margin-bottom:1.25rem; display:flex; align-items:center; gap:8px; }
+  .important-note { font-size:13px; font-weight:600; color:var(--muted); }
 
   /* ── Card ─────────────────────────────────────────────── */
   .card {
@@ -351,6 +357,10 @@
 </head>
 <body>
 
+<div class="page-note">
+  <p class="important-note"><span class="red">IMPORTANT:</span> Before using these calculators, please refer to guidelines for state specifics.</p>
+</div>
+
 <div class="page-grid">
 
   <!-- ════════════════════════════════════════════════════ -->
@@ -375,8 +385,6 @@
         <p>Calculate years licensed with driver's date of birth and workup date</p>
       </div>
     </header>
-
-    <p class="important-note"><span class="red">IMPORTANT:</span> Before using this calculator, please refer to guidelines for state specifics.</p>
 
     <div class="card years-card">
       <div class="field">
@@ -515,9 +523,6 @@
         </svg>
       </button>
     </header>
-
-    <!-- Spacer to align card with the left panel's card (accounts for IMPORTANT note height) -->
-    <div style="margin-bottom:1.25rem;visibility:hidden;font-size:13px;">placeholder</div>
 
     <div class="card">
       <div class="field">
@@ -1117,7 +1122,26 @@ function addFixedFee() {
     if (premFeeInput.value.trim()) premFeeInput.classList.add('invalid');
     return;
   }
+  if (parsedOldPrem === null || parsedNewPrem === null) {
+    premOldInput.classList.toggle('invalid', parsedOldPrem === null);
+    premNewInput.classList.toggle('invalid', parsedNewPrem === null);
+    return;
+  }
+  const adjustedOldPrem = parsedOldPrem - fee;
+  const adjustedNewPrem = parsedNewPrem - fee;
+  if (adjustedOldPrem <= 0 || adjustedNewPrem < 0) {
+    premFeeInput.classList.add('invalid');
+    premResult.innerHTML = `<div class="result warn">
+      <div class="result-hd">${ICON_WARN}<span class="result-title">Fixed fee exceeds premium</span></div>
+      <div class="result-body">The fixed fee of <strong>$${fmtCurrency(fee)}</strong> would leave an adjusted old premium of <strong>$${fmtCurrency(adjustedOldPrem)}</strong> and adjusted new premium of <strong>$${fmtCurrency(adjustedNewPrem)}</strong>. Please verify the fee before adding it.</div>
+    </div>`;
+    return;
+  }
   fixedFees.push(fee);
+  parsedOldPrem = adjustedOldPrem;
+  parsedNewPrem = adjustedNewPrem;
+  premOldInput.value = fmtCurrency(parsedOldPrem);
+  premNewInput.value = fmtCurrency(parsedNewPrem);
   premFeeInput.value = '';
   premFeeInput.classList.remove('invalid');
   renderFixedFees();
@@ -1150,7 +1174,13 @@ premFeeInput.addEventListener('keydown', event => {
 premFeeList.addEventListener('click', event => {
   const btn = event.target.closest('.fee-remove-btn');
   if (!btn) return;
-  fixedFees.splice(Number(btn.dataset.feeIndex), 1);
+  const [removedFee] = fixedFees.splice(Number(btn.dataset.feeIndex), 1);
+  if (removedFee !== undefined && parsedOldPrem !== null && parsedNewPrem !== null) {
+    parsedOldPrem += removedFee;
+    parsedNewPrem += removedFee;
+    premOldInput.value = fmtCurrency(parsedOldPrem);
+    premNewInput.value = fmtCurrency(parsedNewPrem);
+  }
   renderFixedFees();
 });
 
@@ -1173,22 +1203,11 @@ premCalcBtn.addEventListener('click', () => {
   if (!parsedOldPrem || !parsedNewPrem) return;
 
   const totalFees = fixedFeeTotal();
-  const adjustedOldPrem = parsedOldPrem - totalFees;
-  const adjustedNewPrem = parsedNewPrem - totalFees;
-
-  if (adjustedOldPrem <= 0 || adjustedNewPrem < 0) {
-    premResult.innerHTML = `<div class="result warn">
-      <div class="result-hd">${ICON_WARN}<span class="result-title">Fixed fees exceed premium</span></div>
-      <div class="result-body">The fixed fee total of <strong>$${fmtCurrency(totalFees)}</strong> leaves an adjusted old premium of <strong>$${fmtCurrency(adjustedOldPrem)}</strong> and adjusted new premium of <strong>$${fmtCurrency(adjustedNewPrem)}</strong>. Please verify the fees before calculating.</div>
-    </div>`;
-    return;
-  }
-
-  const rawPct = ((adjustedNewPrem / adjustedOldPrem) - 1) * 100;
+  const rawPct = ((parsedNewPrem / parsedOldPrem) - 1) * 100;
   const pct    = Math.round(rawPct * 10) / 10;
   const sign   = pct > 0 ? '+' : '';
-  const oldFmt = fmtCurrency(adjustedOldPrem);
-  const newFmt = fmtCurrency(adjustedNewPrem);
+  const oldFmt = fmtCurrency(parsedOldPrem);
+  const newFmt = fmtCurrency(parsedNewPrem);
   const feeMeta = totalFees > 0 ? `<div class="meta">Fixed fees excluded: $${fmtCurrency(totalFees)}</div>` : '';
 
   let html = '';
