@@ -805,7 +805,7 @@ ageToggle.addEventListener('change',()=>{
     expAgeEnabled=true; ageContent.style.display='';
     agePanel.classList.remove('panel-disabled');
     if(mvrPanel.style.display!=='none') mvrPanel.classList.add('panel-disabled');
-    dobInput.closest('.field').classList.add('dob-optional');
+    dobInput.closest('.field').classList.remove('dob-optional');
   } else {
     expAgeEnabled=false; ageContent.style.display='none';
     ageInput.value=''; ageInput.classList.remove('invalid'); expAgeValue=null;
@@ -826,7 +826,7 @@ document.getElementById('issueDateCalBtn').addEventListener('click',()=>openCale
 
 // ─── Readiness ────────────────────────────────────────────────────────────────
 function checkReady() {
-  const dobOk = (expMvrEnabled || expAgeEnabled) ? true : !!parsedDob;
+  const dobOk = expMvrEnabled ? true : !!parsedDob;
   const ready = !!(selState.value && dobOk && parsedWorkup)
     && (!expMvrEnabled || !!parsedIssueDate)
     && (!expAgeEnabled || expAgeValue !== null);
