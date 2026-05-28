@@ -323,40 +323,6 @@
 
   .red { color:#e03030; }
   [data-theme="light"] .red { color:#cc2222; }
-
-  /* ── Theme toggle: fixed top-right at all viewport sizes ── */
-  .theme-toggle {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  }
-  /* Clearance zone — header text never slides under the fixed toggle */
-  .header { padding-right: 54px; }
-
-  /* ── Smartphone breakpoint ────────────────────────────── */
-  @media (max-width: 960px) {
-    /* Hide alignment spacer when columns stack */
-    .prem-spacer { display: none; }
-  }
-  @media (max-width: 524px) {
-    .page-grid { padding: 1.5rem .875rem 3rem; }
-    .header { gap: 10px; margin-bottom: .5rem; padding-right: 46px; }
-    .logo-box { width: 36px; height: 36px; }
-    .logo-box svg { width: 19px; height: 19px; }
-    .header-text h1 { font-size: 15px; letter-spacing: 0; }
-    .header-text p { font-size: 11px; }
-    .important-note { font-size: 11px; }
-    .card { padding: 1.1rem; }
-    .row { grid-template-columns: 1fr; gap: 0; }
-    .btn-row { grid-template-columns: 1fr; }
-    .btn-clear { justify-content: center; }
-    .tile-num { font-size: 22px; }
-    .tile { padding: 7px 14px; min-width: 56px; }
-    .range-badge { font-size: 15px; padding: 8px 15px; }
-    .prem-pct { font-size: 40px; }
-  }
 </style>
 </head>
 <body>
@@ -527,7 +493,7 @@
     </header>
 
     <!-- Spacer to align card with the left panel's card (accounts for IMPORTANT note height) -->
-    <div class="prem-spacer" style="margin-bottom:1.25rem;visibility:hidden;font-size:13px;">placeholder</div>
+    <div style="margin-bottom:1.25rem;visibility:hidden;font-size:13px;">placeholder</div>
 
     <div class="card">
       <div class="field">
