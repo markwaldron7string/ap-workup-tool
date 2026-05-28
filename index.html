@@ -689,6 +689,26 @@ function getRange(diff) {
   if (m<36) return '2 – 3 years';
   return 'More than 3 years';
 }
+function getNJElapsedRange(diff) {
+  const m = diff.years*12+diff.months;
+  if (m<6) return '0 – 6 months';
+  if (m<12) return '7 – 12 months';
+  if (m<18) return '13 – 18 months';
+  if (m<24) return '19 – 24 months';
+  if (m<30) return '25 – 30 months';
+  if (m<36) return '31 – 35 months';
+  return 'More than 36 months';
+}
+function renderLicensedOutput(code, startDate, workup, title, meta) {
+  const diff = dateDiff(startDate, workup);
+  if (code === 'NJ') {
+    return `<div class="result success"><div class="result-hd">${ICON_CHECK}<span class="result-title">Months licensed</span></div><div class="range-badge">${getNJElapsedRange(diff)}</div><div class="meta">${meta}<span class="dot">·</span>${diff.years} yr ${diff.months} mo ${diff.days} d as of workup date</div></div>`;
+  }
+  if (EXACT_STATES.includes(code)) {
+    return `<div class="result success"><div class="result-hd">${ICON_CHECK}<span class="result-title">${title}</span></div><div class="tiles"><div class="tile"><div class="tile-num">${diff.years}</div><div class="tile-lbl">${diff.years===1?'year':'years'}</div></div></div><div class="meta">${meta}</div></div>`;
+  }
+  return `<div class="result success"><div class="result-hd">${ICON_CHECK}<span class="result-title">${title}</span></div><div class="range-badge">${getRange(diff)}</div><div class="meta">${meta}<span class="dot">·</span>${diff.years} yr ${diff.months} mo ${diff.days} d as of workup date</div></div>`;
+}
 function stateName(code) {
   if (code==='MA') return 'Massachusetts';
   if (code==='NC') return 'North Carolina';
@@ -899,9 +919,7 @@ calcBtn.addEventListener('click',()=>{
     if(workup<parsedIssueDate){
       html=`<div class="result danger"><div class="result-hd">${ICON_X}<span class="result-title">Workup date is before the issue date</span></div><div class="result-body">The workup date (${fmtDate(workup)}) falls before the original DL issue date (${fmtDate(parsedIssueDate)}). Please verify both dates.</div></div>`;
     } else {
-      const diff=dateDiff(parsedIssueDate,workup);
-      const tiles=[`<div class="tile"><div class="tile-num">${diff.years}</div><div class="tile-lbl">${diff.years===1?'year':'years'}</div></div>`];
-      html=`<div class="result success"><div class="result-hd">${ICON_CHECK}<span class="result-title">Years licensed — MVR issue date</span></div><div class="tiles">${tiles.join('')}</div><div class="meta">Based on original DL issue date: ${fmtDate(parsedIssueDate)}</div></div>`;
+      html=renderLicensedOutput(code,parsedIssueDate,workup,'Years licensed — MVR issue date',`Based on original DL issue date: ${fmtDate(parsedIssueDate)}`);
     }
     resultDiv.innerHTML=html; return;
   }
@@ -919,9 +937,7 @@ calcBtn.addEventListener('click',()=>{
       if(workup<licenseDate){
         html=`<div class="result warn"><div class="result-hd">${ICON_WARN}<span class="result-title">Not yet licensed as of workup date</span></div><div class="result-body">Based on the reported license age of ${expAgeValue}, this driver would not have been licensed until ${fmtDate(licenseDate)}.<br><br><strong style="color:var(--warn)">License eligible from: ${fmtDate(licenseDate)}</strong></div></div>`;
       } else {
-        const diff=dateDiff(licenseDate,workup);
-        const tiles=[`<div class="tile"><div class="tile-num">${diff.years}</div><div class="tile-lbl">${diff.years===1?'year':'years'}</div></div>`];
-        html=`<div class="result success"><div class="result-hd">${ICON_CHECK}<span class="result-title">Years licensed — reported age</span></div><div class="tiles">${tiles.join('')}</div><div class="meta">Based on reported first license age: ${expAgeValue} · Calculated license date: ${fmtDate(licenseDate)}</div></div>`;
+        html=renderLicensedOutput(code,licenseDate,workup,'Years licensed — reported age',`Based on reported first license age: ${expAgeValue} · Calculated license date: ${fmtDate(licenseDate)}`);
       }
     }
     resultDiv.innerHTML=html; return;
