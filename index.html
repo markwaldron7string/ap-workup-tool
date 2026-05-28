@@ -919,7 +919,7 @@ calcBtn.addEventListener('click',()=>{
     if(workup<parsedIssueDate){
       html=`<div class="result danger"><div class="result-hd">${ICON_X}<span class="result-title">Workup date is before the issue date</span></div><div class="result-body">The workup date (${fmtDate(workup)}) falls before the original DL issue date (${fmtDate(parsedIssueDate)}). Please verify both dates.</div></div>`;
     } else {
-      html=renderLicensedOutput(code,parsedIssueDate,workup,'Years licensed — MVR issue date',`Based on original DL issue date: ${fmtDate(parsedIssueDate)}`);
+      html=renderLicensedOutput(code,parsedIssueDate,workup,'Years licensed',`Based on original DL issue date: ${fmtDate(parsedIssueDate)}`);
     }
     resultDiv.innerHTML=html; return;
   }
@@ -937,7 +937,7 @@ calcBtn.addEventListener('click',()=>{
       if(workup<licenseDate){
         html=`<div class="result warn"><div class="result-hd">${ICON_WARN}<span class="result-title">Not yet licensed as of workup date</span></div><div class="result-body">Based on the reported license age of ${expAgeValue}, this driver would not have been licensed until ${fmtDate(licenseDate)}.<br><br><strong style="color:var(--warn)">License eligible from: ${fmtDate(licenseDate)}</strong></div></div>`;
       } else {
-        html=renderLicensedOutput(code,licenseDate,workup,'Years licensed — reported age',`Based on reported first license age: ${expAgeValue} · Calculated license date: ${fmtDate(licenseDate)}`);
+        html=renderLicensedOutput(code,licenseDate,workup,'Years licensed',`Based on reported first license age: ${expAgeValue} · Calculated license date: ${fmtDate(licenseDate)}`);
       }
     }
     resultDiv.innerHTML=html; return;
